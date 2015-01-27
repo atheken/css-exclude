@@ -8,7 +8,7 @@
   },
   "main": "./index.js",
   "bin": {
-    "css-merge": "./cli.js"
+    "cssmerge": "./cli.js"
   },
   "author": "Andrew Theken",
   "license": "ISC",
