@@ -62,20 +62,41 @@ function notContained(leftRules, rightRules, firstName, secondName) {
   return result;
 }
 
-function flattedRulesDiff(leftRules, rightRules) {
+function flattedRulesDiff(leftRules, rightRules, outputSide) {
   var result = "";
-  result += notContained(leftRules, rightRules, "left", "right");
-  result += notContained(rightRules, leftRules, "right", "left");
-
-  result += '/* Selectors that were shared, but contain separate declarations */\n';
+  if (outputSide !== "right") {
+    result += notContained(leftRules, rightRules, "left", "right");
+  }
+  if (outputSide !== "left") {
+    result += notContained(rightRules, leftRules, "right", "left");
+  }
 
   var sharedKeys = _.intersection(_.keys(leftRules.rules), _.keys(rightRules.rules));
+
+  result += '/*\n  Selectors that are in both files but\n  (may) have "conflicting" declarations.\n*/\n';
 
   _.forEach(sharedKeys, function(key) {
     var leftDec = _.difference(leftRules.rules[key].declarations, rightRules.rules[key].declarations);
     var rightDec = _.difference(rightRules.rules[key].declarations, leftRules.rules[key].declarations);
 
-    if (leftDec.length > 0 || rightDec.length > 0) {
+    if (outputSide === "left" && leftDec.length > 0) {
+      result += key + ' {\n';
+      if (leftDec.length > 0) {
+        _.forEach(leftDec, function(dec) {
+          result += '\t' + dec + ';\n'
+        });
+      }
+      result += '}\n';
+    } else if (outputSide === "right" && rightDec.length > 0) {
+      result += key + ' {\n';
+      if (rightDec.length > 0) {
+        _.forEach(rightDec, function(dec) {
+          result += '\t' + dec + ';\n'
+        });
+      }
+      result += '}\n';
+    } else if (leftDec.length > 0 || rightDec.length > 0) {
+
       result += key + ' {\n';
 
       if (leftDec.length > 0) {
@@ -93,17 +114,18 @@ function flattedRulesDiff(leftRules, rightRules) {
       }
       result += '}\n';
     }
+
   });
 
   return result;
 }
 
-module.exports = function(file1, file2) {
+module.exports = function(file1, file2, outputSide) {
   var left = css.parse(file1);
   var right = css.parse(file2);
 
   var leftFlat = flattenedRules(left.stylesheet.rules);
   var rightFlat = flattenedRules(right.stylesheet.rules);
 
-  return flattedRulesDiff(leftFlat, rightFlat);
+  return flattedRulesDiff(leftFlat, rightFlat, outputSide);
 }

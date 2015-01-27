@@ -13,10 +13,13 @@
   "author": "Andrew Theken",
   "license": "ISC",
   "dependencies": {
+    "commander": "^2.6.0",
     "css": "^2.1.0",
     "lodash": "^3.0.0"
   },
-  "precommit": ["test"],
+  "precommit": [
+    "test"
+  ],
   "devDependencies": {
     "mocha": "^2.1.0",
     "pre-commit": "0.0.11",
