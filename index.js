@@ -2,130 +2,147 @@ var css = require('css');
 var fs = require('fs');
 var _ = require('lodash');
 
-function selectorForRule(rule) {
-  var selectors = ""
+function RuleNode() {
+  this.children = [];
+  this.type = "rule"
+};
 
-  var sels = _.sortBy(rule.selectors, function(n) {
-    return n;
+RuleNode.prototype.toString = function() {
+  var retval = "";
+  var inner = "";
+  _.forEach(this.children, function(c) {
+    inner += c.toString();
   });
+  if (inner !== "") {
+    retval = this.selectors + " {\n" + inner + "}\n";
+  }
+  return retval;
+};
 
-  _.forEach(sels, function(s) {
-    selectors += s + ', ';
-  });
-
-  selectors = selectors.replace(/[,\s]+$/, '');
-
-  return selectors;
-}
-
-function cssDeclarationString(declaration) {
-  return declaration.property + ' : ' + declaration.value;
-}
-
-function flattenedRules(rules) {
-  var retval = {};
-  retval.rules = {};
-
-  _.forEach(rules, function(r) {
-    if (r.type == "rule") {
-      var selector = selectorForRule(r);
-      retval.rules[selector] = retval.rules[selector] || {};
-      var obj = retval.rules[selector];
-      obj.declarations = obj.declarations || []
-      _.forEach(r.declarations, function(d) {
-        obj.declarations.push(cssDeclarationString(d));
+RuleNode.prototype.exclude = function(rightRules) {
+  var self = this;
+  _.forEach(rightRules, function(r) {
+    if (r.type = self.type && r.selectors == self.selectors) {
+      var rightStrings = _.map(r.declarations, function(d) {
+        return d.toString();
       });
-      obj.declarations = _.uniq(obj.declarations);
+
+      self.children = _.remove(self.children, function(c) {
+        //remove 
+        return _.find(rightStrings, function(r) {
+          return c.toString() == r;
+        });
+      });
     }
   });
+}
 
+function AtRuleNode() {
+  this.children = []
+}
+
+AtRuleNode.prototype.toString = function() {
+  var retval = '';
+  var inner = '';
+  _.forEach(this.children, function(c) {
+    inner += c.toString();
+  });
+
+  if (inner !== '') {
+    retval = "@" + this.name + " " + this.selector + " {\n" + inner + "\n}\n";
+  }
   return retval;
 }
 
-function notContained(leftRules, rightRules, firstName, secondName) {
-  var result = "";
-
-  var leftKeys = _.keys(leftRules.rules);
-  var rightKeys = _.keys(rightRules.rules);
-
-  result += '/* Selectors in ' + firstName + ', not in ' + secondName + '.*/\n';
-
-  _.forEach(_.difference(leftKeys, rightKeys), function(key) {
-    result += key + ' {\n';
-
-    _.forEach(leftRules.rules[key].declarations, function(d) {
-      result += '\t' + d + '\n';
-    });
-    result += '}\n\n';
-  });
-
-  return result;
-}
-
-function flattedRulesDiff(leftRules, rightRules, outputSide) {
-  var result = "";
-  if (outputSide !== "right") {
-    result += notContained(leftRules, rightRules, "left", "right");
-  }
-  if (outputSide !== "left") {
-    result += notContained(rightRules, leftRules, "right", "left");
-  }
-
-  var sharedKeys = _.intersection(_.keys(leftRules.rules), _.keys(rightRules.rules));
-
-  result += '/*\n  Selectors that are in both files but\n  (may) have "conflicting" declarations.\n*/\n';
-
-  _.forEach(sharedKeys, function(key) {
-    var leftDec = _.difference(leftRules.rules[key].declarations, rightRules.rules[key].declarations);
-    var rightDec = _.difference(rightRules.rules[key].declarations, leftRules.rules[key].declarations);
-
-    if (outputSide === "left" && leftDec.length > 0) {
-      result += key + ' {\n';
-      if (leftDec.length > 0) {
-        _.forEach(leftDec, function(dec) {
-          result += '\t' + dec + ';\n'
-        });
-      }
-      result += '}\n';
-    } else if (outputSide === "right" && rightDec.length > 0) {
-      result += key + ' {\n';
-      if (rightDec.length > 0) {
-        _.forEach(rightDec, function(dec) {
-          result += '\t' + dec + ';\n'
-        });
-      }
-      result += '}\n';
-    } else if (leftDec.length > 0 || rightDec.length > 0) {
-
-      result += key + ' {\n';
-
-      if (leftDec.length > 0) {
-        result += '\t/* Missing from right: */\n';
-        _.forEach(leftDec, function(dec) {
-          result += '\t' + dec + ';\n'
-        });
-      }
-
-      if (rightDec.length > 0) {
-        result += '\t/* Missing from left: */\n';
-        _.forEach(rightDec, function(dec) {
-          result += '\t' + dec + ';\n'
-        });
-      }
-      result += '}\n';
+AtRuleNode.prototype.exclude = function(rightRules) {
+  var self = this;
+  _.forEach(rightRules, function(r) {
+    if (self.name == r.name &&
+      self.selector == r.selector &&
+      self.type == r.type) {
+      _.forEach(self.children, function(c) {
+        c.exclude(r.children);
+      });
     }
-
   });
-
-  return result;
 }
 
-module.exports = function(file1, file2, outputSide) {
-  var left = css.parse(file1);
-  var right = css.parse(file2);
+function DeclarationNode() {
+  this.type = "declaration";
+};
 
-  var leftFlat = flattenedRules(left.stylesheet.rules);
-  var rightFlat = flattenedRules(right.stylesheet.rules);
+DeclarationNode.prototype.toString = function() {
+  return '\t' + this.name + ' : ' + this.value + ';\n';
+}
 
-  return flattedRulesDiff(leftFlat, rightFlat, outputSide);
+function convertSheetToNodes(rules) {
+  var retval = [];
+  _.forEach(rules, function(r) {
+    var node = null;
+    switch (r.type) {
+      case "rule":
+      case "keyframe":
+        node = new RuleNode();
+        node.selectors = selectorForRule(r);
+        node.children = convertSheetToNodes(r.declarations);
+        break;
+      case "media":
+        node = new AtRuleNode();
+        node.name = "media";
+        node.selector = r.media;
+        node.children = convertSheetToNodes(r.rules);
+        break;
+      case "font-face":
+        node = new AtRuleNode();
+        node.name = "font-face";
+        node.selector = '';
+        node.children = convertSheetToNodes(r.declarations);
+        break;
+      case "key-frames":
+        node = new AtRuleNode();
+        node.name = (node.vendor || '') + "key-frames";
+        node.selector = '';
+        node.children = convertSheetToNodes(r.keyframes);
+        break;
+      case "declaration":
+        node = new DeclarationNode();
+        node.name = r.property;
+        node.value = r.value;
+        break;
+        //import
+    }
+    if (node !== null) {
+      retval.push(node);
+    }
+  });
+  return retval;
+}
+
+function selectorForRule(rule) {
+  var sels = _.sortBy(rule.selectors || rule.values);
+  var selectors = _.reduce(sels, function(r, s) {
+    return r += s + ', ';
+  }, '');
+  return selectors.replace(/[,\s]+$/, '');
+}
+
+
+
+module.exports = {};
+module.exports.RuleNode = RuleNode;
+module.exports.AtRuleNode = AtRuleNode;
+module.exports.DeclarationNode = DeclarationNode;
+module.exports.merger = function(leftFile, rightFile) {
+
+  var left = convertSheetToNodes(css.parse(leftFile).stylesheet.rules);
+  var right = convertSheetToNodes(css.parse(rightFile).stylesheet.rules);
+
+  var retval = [];
+
+  _.forEach(left, function(l) {
+    l.exclude(right);
+    retval.push(l);
+  });
+
+  return left;
 }
