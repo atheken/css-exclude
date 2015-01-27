@@ -1,0 +1,11 @@
+.rule-in-second-test{
+	display: none;
+}
+
+.rule-not-matching-in-both{
+	background: green;
+}
+
+.rule-matching-in-both{
+	color: purple;
+}

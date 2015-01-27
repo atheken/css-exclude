@@ -1,15 +1,25 @@
 {
-  "name": "css-comparer",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "name": "css-merge",
+  "version": "0.0.1-alpha",
+  "description": "A tool that merges rules from two css files.",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node_modules/.bin/mocha tests/fixture_*.js",
+    "watchtests": "node_modules/.bin/mocha -R list -w --recursive -G tests/fixture_*.js"
   },
-  "author": "",
+  "main": "./index.js",
+  "bin": {
+    "css-merge": "./cli.js"
+  },
+  "author": "Andrew Theken",
   "license": "ISC",
   "dependencies": {
     "css": "^2.1.0",
     "lodash": "^3.0.0"
+  },
+  "precommit": ["test"],
+  "devDependencies": {
+    "mocha": "^2.1.0",
+    "pre-commit": "0.0.11",
+    "which": "^1.0.8"
   }
 }
