@@ -16,6 +16,6 @@ describe('merger', function() {
     });
 
     var result = cssmerge.exclude(file1, file2).toString()
-      //assert.equal(firstMinusSecond, result);
+    assert.equal(firstMinusSecond.replace(/\s+/g, ''), result.replace(/\s+/g, ''));
   });
 });

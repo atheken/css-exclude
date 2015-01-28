@@ -4,6 +4,7 @@
   "description": "A tool that merges rules from two css files.",
   "scripts": {
     "test": "node_modules/.bin/mocha tests/fixture_*.js",
+    "debugtests": "node_modules/.bin/mocha debug -G tests/fixture_*.js",
     "watchtests": "node_modules/.bin/mocha -R list -w --recursive -G tests/fixture_*.js"
   },
   "main": "./index.js",

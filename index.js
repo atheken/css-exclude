@@ -1,6 +1,7 @@
 var css = require('css');
 var fs = require('fs');
 var _ = require('lodash');
+var util = require('util');
 
 function StylesheetNode(rules) {
   this.children = rules;
@@ -35,16 +36,18 @@ RuleNode.prototype.toString = function() {
 RuleNode.prototype.exclude = function(rightRules) {
   var self = this;
   _.forEach(rightRules, function(r) {
+
     if (r.type = self.type && r.selectors == self.selectors) {
-      var rightStrings = _.map(r.declarations, function(d) {
+
+      var rightStrings = _.map(r.children, function(d) {
         return d.toString();
       });
 
-      self.children = _.remove(self.children, function(c) {
-        //remove 
-        return _.find(rightStrings, function(r) {
-          return c.toString() == r;
+      _.remove(self.children, function(c) {
+        var result = _.find(rightStrings, function(d) {
+          return c.toString() === d;
         });
+        return result || false;
       });
     }
   });
