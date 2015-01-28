@@ -1,0 +1,7 @@
+.rule-in-first-test{
+	display: none;
+}
+
+.rule-not-matching-in-both{
+	background: red;
+}

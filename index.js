@@ -2,6 +2,19 @@ var css = require('css');
 var fs = require('fs');
 var _ = require('lodash');
 
+function StylesheetNode(rules) {
+  this.children = rules;
+  this.type = 'stylesheet';
+}
+
+StylesheetNode.prototype.toString = function() {
+  var retval = ''
+  _.forEach(this.children, function(c) {
+    retval += c.toString();
+  });
+  return retval;
+}
+
 function RuleNode() {
   this.children = [];
   this.type = "rule"
@@ -132,17 +145,16 @@ module.exports = {};
 module.exports.RuleNode = RuleNode;
 module.exports.AtRuleNode = AtRuleNode;
 module.exports.DeclarationNode = DeclarationNode;
-module.exports.merger = function(leftFile, rightFile) {
+module.exports.StylesheetNode = StylesheetNode;
+
+module.exports.exclude = function(leftFile, rightFile) {
 
   var left = convertSheetToNodes(css.parse(leftFile).stylesheet.rules);
   var right = convertSheetToNodes(css.parse(rightFile).stylesheet.rules);
 
-  var retval = [];
-
   _.forEach(left, function(l) {
     l.exclude(right);
-    retval.push(l);
   });
 
-  return left;
+  return new StylesheetNode(left);
 }
