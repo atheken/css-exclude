@@ -1,8 +1,8 @@
-#What is `cssmerge`?
+#What is `css-exclude`?
 
-Cssmerge is a simple utility that allows you to input two css files, and have the utility print out the rules/at-rules that are found in the first file, but not the second.
+css-exclude is a simple utility that allows you to input two css files, and have the utility print out the rules/at-rules that are found in the first file, but not the second.
 
-Cssmerge doesn't care about document order, which makes it dangerous to use on complex CSS files, but if you're trying to resolve missing declarations betwene two css files, it's a great diagnostic tool.
+css-exclude doesn't care about document order, which makes it dangerous to use on complex CSS files, but if you're trying to resolve missing declarations between two css files, it's a great diagnostic tool.
 
 
 ###&lt;blink>WARNING: ALPHA!&lt;/blink>
@@ -41,10 +41,10 @@ And `file2.css`
 }
 ```
 
-Run `cssmerge`
+Run `cssexclude`
 
 ```bash
-cssmerge ./file1.css ./file2.css
+cssexclude ./file1.css ./file2.css
 ```
 
 And get this result:
@@ -62,6 +62,6 @@ And get this result:
 To Install:
 
 ```bash
-npm install -g atheken/css-merge
+npm install -g atheken/css-exclude
 ```
 
