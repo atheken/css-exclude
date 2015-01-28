@@ -1,7 +1,7 @@
 {
-  "name": "css-merge",
+  "name": "css-exclude",
   "version": "0.0.1-alpha",
-  "description": "A tool that merges rules from two css files.",
+  "description": "A tool that excludes css rules found in multiple files.",
   "scripts": {
     "test": "node_modules/.bin/mocha tests/fixture_*.js",
     "debugtests": "node_modules/.bin/mocha debug -G tests/fixture_*.js",
@@ -9,10 +9,10 @@
   },
   "main": "./index.js",
   "bin": {
-    "cssmerge": "./cli.js"
+    "cssexclude": "./cli.js"
   },
   "author": "Andrew Theken",
-  "license": "ISC",
+  "license": "MIT",
   "dependencies": {
     "commander": "^2.6.0",
     "css": "^2.1.0",
